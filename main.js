@@ -1,3 +1,7 @@
+function getBestMove(board, maxDepth) {
+    [score, move] = minimax(board, board.currentPlayer(), maxDepth, 0);
+    return move;
+}
 
 function minimax(board, player, maxDepth, currentDepth) {
     // check if we're done recursing
@@ -6,7 +10,6 @@ function minimax(board, player, maxDepth, currentDepth) {
     }
 
     // otherwise bubble up values from below
-
     var bestScore;
     if (board.currentPlayer() == player) {
         bestScore = Number.NEGATIVE_INFINITY;
@@ -35,23 +38,50 @@ function minimax(board, player, maxDepth, currentDepth) {
         }
     }
 
+    board._state.value = bestMove.value;
     return [bestScore, bestMove];
 }
 
 window.onload = function () {
+    function keydownHandler(e) {
+        if (e.keyCode == 13 && waitingForEnter) {
+            console.log("enter");
+        }
+    }
+
+    if (document.addEventListener) {
+        document.addEventListener('keydown', keydownHandler, false);
+    }
+    else if (document.attachEvent) {
+        document.attachEvent('onkeydown', keydownHandler);
+    }
+
     var canvas = document.getElementById("canvas"),
         context = canvas.getContext("2d"),
         width = canvas.width = window.innerWidth,
         height = canvas.height = window.innerHeight;
 
-    var root = new TreeNode(100);
-
-    var childa = root.addChild(new TreeNode(50));
-    childa.addChild(new TreeNode(30));
-    childa.addChild(new TreeNode(40));
-    var childb = root.addChild(new TreeNode(20));
+    var root = this.parse([[[0], [0], [0]], [[[[2],[2]]], [1]]]);
 
     var radius = 30;
     var x = width / 2;
     root.draw(context, x, 100, radius, 40);
+
+    window.onresize = function () {
+        canvas.height = window.innerHeight;
+        root.draw(context, x, 100, radius, 40);
+    };
+}
+
+function parse(tree) {
+    var root = new TreeNode(0);
+    for (let index = 0; index < tree.length; index++) {
+        let child = tree[index];
+        if (child.length == 1 && !Array.isArray(child[0])) {
+            root.addChild(new TreeNode(child[0]));
+        } else {
+            root.addChild(parse(child));
+        }
+    }
+    return root;
 }
