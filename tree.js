@@ -2,8 +2,9 @@ class TreeNode {
     constructor(value) {
         this._children = new Array();
         this._value = value;
-        this._width = 0;
-        this._k = 0;
+        this._key = 0;
+        this._explored = false;
+        this._visited = false;
     }
 
     get text() {
@@ -16,6 +17,10 @@ class TreeNode {
 
     set value(n) {
         this._value = n;
+    }
+
+    get children() {
+        return this._children;
     }
 
     hasChildren() {
@@ -156,7 +161,14 @@ class TreeRenderer {
 
     // renders node
     _renderNode(ctx, node, x, y, r) {
-        canvasUtils.circle(ctx, x, y, r, "#abc");
+        let color = "#abc";
+        if (node._visited) {
+            color = "#74f285";
+        } else if (node._explored) {
+            color = "#e39d34";
+        }
+
+        canvasUtils.circle(ctx, x, y, r, color);
         canvasUtils.text(ctx, node.text, x, y, "20px Georgia");
     }
 }
