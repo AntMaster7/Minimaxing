@@ -14,7 +14,7 @@ class canvasUtils {
         context2d.strokeStyle = restoreStrokeStyle;
     }
 
-    static rect(context2d, x, y, width, height, strokeStyle = "black", lineWidth = 2) {
+    static rect(context2d, x, y, width, height, strokeStyle = "black", lineWidth = 1) {
         var restoreLineWidth = context2d.lineWidth,
             restoreStrokeStyle = context2d.strokeStyle;
 
@@ -22,7 +22,6 @@ class canvasUtils {
         context2d.rect(x, y, width, height);
         context2d.lineWidth = lineWidth;
         context2d.strokeStyle = strokeStyle;
-        context2d.setLineDash([10, 10]);
         context2d.stroke();
         context2d.setLineDash([]);
 
