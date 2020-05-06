@@ -10,11 +10,7 @@ window.onload = function () {
     const renderer = new TreeRenderer(canvas, 30, 40);
 
     // Create a tree object from a simple array.
-    let tree = TreeNode.parse([[[0], [0], [0]], [[[[2], [2]]], [1]]]);
-	
-	// Add unique key to each node
-	let key = 0;
-    TreeNode.traverse(tree, (node) => node.value = key++);
+    let tree = TreeNode.parse([[[5], [-3], [4]], [[[[2], [-1]]], [1]]]);
 
     // Compute tree center position.
     let treeWidth = renderer.measureWidth(tree);
@@ -26,8 +22,16 @@ window.onload = function () {
     renderer.render(tree, x + xOffset, y);
 
     let stack = [];
-	stack.push(tree);
+    stack.push(tree);
     let visited = new Set();
+
+    function visit(node) {
+        if (node.children.length > 1) {
+            node.value = node.children.map(a => a.value).reduce((a, b) => Math.max(-a, -b));
+        } else if (node.children.length) {
+            node.value = -node.children[0].value;
+        }
+    }
 
     window.addEventListener("keypress", event => {
         if (event.isComposing || event.keyCode === 229) {
@@ -39,7 +43,7 @@ window.onload = function () {
                 console.log("reset");
                 stack.push(tree);
                 visited.clear();
-				TreeNode.traverse(tree, (node) => node._explored = node._visited = false);
+                TreeNode.traverse(tree, (node) => node._explored = node._visited = false);
                 renderer.render(tree, x + xOffset, y);
                 return;
             }
@@ -61,7 +65,9 @@ window.onload = function () {
                 } else {
                     stepThrough = false;
                     current = stack.pop();
-                    console.log("visit: " + current._key);
+                    
+                    visit(current);
+
                     current._visited = true;
                     renderer.render(tree, x + xOffset, y);
                 }

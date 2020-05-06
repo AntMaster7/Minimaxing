@@ -1,3 +1,7 @@
+function isNullOrUndefined(value){
+    return value === undefined || value === null;
+}
+
 export default class TreeNode {
     constructor(value) {
         this._children = new Array();
@@ -8,7 +12,7 @@ export default class TreeNode {
     }
 
     get text() {
-        return this._value;
+        return isNullOrUndefined(this._value) ? '' : this._value;
     }
 
     get value() {
@@ -49,7 +53,7 @@ export default class TreeNode {
      * @param {*} array - The array to parse.
      */
     static parse(array) {
-        var root = new TreeNode(0);
+        var root = new TreeNode();
         for (let index = 0; index < array.length; index++) {
             let child = array[index];
             if (child.length == 1 && !Array.isArray(child[0])) {
@@ -63,15 +67,15 @@ export default class TreeNode {
 
     static traverse(node, visitor) {
         let stack = [];
-        let visited = new Set();
-		let current;
-		stack.push(node);
+        let explored = new Set();
+        let current;
+        stack.push(node);
         while (current = stack[stack.length - 1]) {
-            if (!visited.has(current)) {
+            if (!explored.has(current)) {
                 for (let child of current.children) {
                     stack.push(child);
                 }
-                visited.add(current);
+                explored.add(current);
             } else {
                 visitor(stack.pop());
             }
