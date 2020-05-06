@@ -1,0 +1,23 @@
+{
+  "name": "minimaxing",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "http-server -c-1 -p 8081"
+	
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eggersa/Minimaxing.git"
+  },
+  "author": "Samuel Egger",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/eggersa/Minimaxing/issues"
+  },
+  "homepage": "https://github.com/eggersa/Minimaxing#readme",
+  "dependencies": {
+    "http-server": "^0.12.3"
+  }
+}

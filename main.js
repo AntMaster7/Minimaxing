@@ -1,3 +1,6 @@
+import TreeNode from './treeNode.js';
+import TreeRenderer from './treeRenderer.js';
+
 window.onload = function () {
     let canvas = document.getElementById("canvas"),
         width = canvas.width = window.innerWidth;
@@ -8,39 +11,23 @@ window.onload = function () {
 
     // Create a tree object from a simple array.
     let tree = TreeNode.parse([[[0], [0], [0]], [[[[2], [2]]], [1]]]);
+	
+	// Add unique key to each node
+	let key = 0;
+    TreeNode.traverse(tree, (node) => node.value = key++);
 
     // Compute tree center position.
     let treeWidth = renderer.measureWidth(tree);
     let x = width / 2,
         xOffset = -(treeWidth / 2);
-
     let y = 100;
-
-    index(tree);
 
     // Render the tree. 
     renderer.render(tree, x + xOffset, y);
 
     let stack = [];
+	stack.push(tree);
     let visited = new Set();
-
-    function index(node) {
-        let index = 1;
-        let stack = [];
-        let visited = new Set();
-        stack.push(node);
-        while (current = stack.pop()) {
-            if (!visited.has(current)) {
-                for (child of current.children) {
-                    stack.push(child);
-                }
-                visited.add(current);
-                current._explored = false;
-                current._visited = false;
-                current.value = current._key = index++;
-            }
-        }
-    }
 
     window.addEventListener("keypress", event => {
         if (event.isComposing || event.keyCode === 229) {
@@ -52,7 +39,7 @@ window.onload = function () {
                 console.log("reset");
                 stack.push(tree);
                 visited.clear();
-                index(tree);
+				TreeNode.traverse(tree, (node) => node._explored = node._visited = false);
                 renderer.render(tree, x + xOffset, y);
                 return;
             }
@@ -61,15 +48,15 @@ window.onload = function () {
 
             while (stepThrough) {
                 let current = stack[stack.length - 1];
-                if (!visited.has(current._key)) {
+                if (!visited.has(current)) {
                     console.log("explore: " + current._key);
                     current._explored = true;
                     stepThrough = false;
-                    for (child of current.children) {
+                    for (let child of current.children) {
                         console.log("push: " + child._key);
                         stack.push(child);
                     }
-                    visited.add(current._key);
+                    visited.add(current);
                     renderer.render(tree, x + xOffset, y);
                 } else {
                     stepThrough = false;
