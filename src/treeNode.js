@@ -1,14 +1,9 @@
-function isNullOrUndefined(value){
-    return value === undefined || value === null;
-}
-
 export default class TreeNode {
     constructor(value) {
-        this._children = new Array();
+        this._children = [];
         this._value = value;
         this._key = 0;
-        this._explored = false;
-        this._visited = false;
+        this._annotation = null;
     }
 
     get text() {
@@ -27,6 +22,14 @@ export default class TreeNode {
         return this._children;
     }
 
+    set annotation(a) {
+        this._annotation = a;
+    }
+
+    get annotation() {
+        return this._annotation;
+    }
+
     hasChildren() {
         return this._children.length > 0;
     }
@@ -42,7 +45,7 @@ export default class TreeNode {
     }
 
     /**
-     * Parses an array in the form of [[[2], [2]], [1]] and creates a tree object.
+     * Parses an array in the form of [[[2], [2]], [1]] and creates an entire tree.
      * 
      *        ()
      *       /  \
@@ -50,7 +53,8 @@ export default class TreeNode {
      *     /  \
      *   (2)  (2)
      * 
-     * @param {*} array - The array to parse.
+     * @param {Array} array - The array to parse.
+     * @returns Returns the root node of the tree.
      */
     static parse(array) {
         var root = new TreeNode();
@@ -65,6 +69,12 @@ export default class TreeNode {
         return root;
     }
 
+    /**
+     * Visits each node in a right order traversal.
+     * 
+     * @param {TreeNode} node - The root node of the tree. 
+     * @param {*} visitor - A visit function with a node parameter.
+     */
     static traverse(node, visitor) {
         let stack = [];
         let explored = new Set();
@@ -80,5 +90,27 @@ export default class TreeNode {
                 visitor(stack.pop());
             }
         }
+    }
+
+    /**
+     * Returns the first node that matches the given predicate using 
+     * a simple binary search algorithm. Returns null if no match was found.
+     * 
+     * @param {TreeNode} node - The root node of the tree.
+     * @param {*} predicate - The predicate to check if a node matches.
+     */
+    static find(node, predicate) {
+        if (predicate(node)) {
+            return node;
+        } else if (node.children.length) {
+            let found = null;
+            for (let child of node.children) {
+                found = TreeNode.find(child, predicate);
+                if (found) {
+                    return found;
+                }
+            }
+        }
+        return null;
     }
 }

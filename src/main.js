@@ -3,8 +3,8 @@ import TreeRenderer from './treeRenderer.js';
 
 window.onload = function () {
     let canvas = document.getElementById("canvas"),
-        width = canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+        width = canvas.width = 800;
+    canvas.height = window.innerHeight - 2;
 
     // Initialize our tree renderer.
     const renderer = new TreeRenderer(canvas, 30, 40);
@@ -78,8 +78,7 @@ window.onload = function () {
     // Redraw tree if window size changed.
     window.onresize = function () {
         // Resize our canvas.
-        canvas.height = window.innerHeight;
-        let width = canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight -2;
 
         // Update new tree center position.
         treeWidth = renderer.measureWidth(tree);

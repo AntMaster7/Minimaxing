@@ -1,3 +1,5 @@
+import TreeNode from "./treeNode.js";
+
 export default class TreeRenderer {
     /**
      * Initializes the TreeRenderer instance.
@@ -10,6 +12,19 @@ export default class TreeRenderer {
         this._canvas = canvas;
         this._radius = radius;
         this._space = space;
+        this._selected = null;
+        this._rendered = false;
+
+        let that = this;
+        this._canvas.addEventListener('click', function (event) {
+            let position = canvasUtils.getCursorPosition(that._canvas, event);
+
+            let previousSelected = that._selected;
+            that._selected = that._hittest(position);
+            if (previousSelected != that._selected) {
+                that.refresh();
+            }
+        });
     }
 
     /**
@@ -22,7 +37,7 @@ export default class TreeRenderer {
         let width = 0;
 
         if (tree._children.length) {
-            for (let child of tree._children) {
+            for (let child of tree.children) {
                 width += this.measureWidth(child) + this._space;
             }
         } else {
@@ -41,70 +56,140 @@ export default class TreeRenderer {
      * @param {*} y - The top position of the tree.
      */
     render(tree, x, y) {
-        const context2d = this._canvas.getContext("2d");
-        this._render(context2d, tree, x, y, this._radius, this._space);
+        this._tree = tree;
+        this._layout(this._tree, x, y, this._radius, this._space);
+        this.refresh();
     }
 
-    _render(ctx, node, x, y, r, s) {
+    /**
+     * Redraws the tree to update its visual state like selection or texts.
+     * Note that refresh does not draw any new nodes. Call render instead 
+     * if you modified the tree's structure. 
+     */
+    refresh() {
+        if (isNullOrUndefined(this._tree)) {
+            console.error("No tree. Use render method first to set a tree.");
+        }
+        this._render();
+    }
+
+    /**
+     * Recursively creates a _position and _parent property on each node. The position {x, y}
+     * contains the absoult center of a node relative to the canvas. 
+     * The parent is used later on to draw a line between each child and its parent.
+     * 
+     * @param {} node The root node.
+     * @param {*} x The x-coordinate left of the tree's bounding box.
+     * @param {*} y The y-coordinate top of the tree's bounding box.
+     */
+    _layout(node, x, y) {
         let cx = x; // some kind of vertical scan line
-        let cy = y + 3 * r; // y-coordinate for children
+        let cy = y + 3 * this._radius; // y-coordinate for children
 
-        let directChildrenPositions = [];
-
-        // draw children
-        for (let index = 0; index < node._children.length; index++) {
-            // draw current child and update the position for the next child
-            let result = this._render(ctx, node._children[index], cx, cy, r, s);
-            cx += result[0];
+        // layout children
+        for (let index = 0; index < node.children.length; index++) {
+            let child = node.children[index];
+            child._parent = node;
+            cx += this._layout(child, cx, cy, node);
             if (index < node._children.length - 1 /* not last */) {
-                cx += s;
+                cx += this._space;
             }
-
-            directChildrenPositions.push(result[1]);
-
-            /* some vector math to clip line
-            var vx = TreeNode.hack.x - n;
-            var vy = TreeNode.hack.y - y;
-            var length = Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
-            var lambda = (length - r) / length;
-            vx *= lambda;
-            vy *= lambda;
-            */
-
-            // canvasUtils.line(ctx, n, y, n + vx, y + vy);
         }
 
         // total width used by all children
         let totalWidthChildren = cx - x;
-
-        // special case for nodes without siblings
         if (totalWidthChildren === 0) {
-            totalWidthChildren = 2 * r;
+            // special case for nodes without siblings
+            totalWidthChildren = 2 * this._radius;
         }
 
         // get position horizontally centered above its children for node
-        let absoluteCenterX = x + (totalWidthChildren / 2);
+        let xC = x + (totalWidthChildren / 2);
+        node._position = { x: xC, y: y };
 
-        // draw edges from node to its children
-        let childPosition = null;
-        while ((childPosition = directChildrenPositions.pop())) {
-            canvasUtils.line(ctx, absoluteCenterX, y, childPosition[0], childPosition[1]);
-        }
+        return totalWidthChildren;
+    }
 
-        this._renderNode(ctx, node, absoluteCenterX, y, r);
-        return [totalWidthChildren, [absoluteCenterX, y]];
+    _render() {
+        const context2d = this._canvas.getContext("2d");
+
+        context2d.clearRect(0, 0, canvas.width, canvas.height);
+
+        let that = this;
+        TreeNode.traverse(this._tree, (node) => {
+            if (node._parent) {
+                that._connectNodes(context2d, node, node._parent);
+            }
+            that._renderNode(context2d, node);
+        });
+
+        this._rendered = true;
+    }
+
+    _connectNodes(ctx, node1, node2) {
+        canvasUtils.line(ctx,
+            node1._position.x, node1._position.y,
+            node2._position.x, node2._position.y
+        );
     }
 
     // renders node
-    _renderNode(ctx, node, x, y, r) {
-        let color = "#abc";
+    _renderNode(ctx, node) {
+        let color, strokeStyle;
+        let x = node._position.x,
+            y = node._position.y;
+
+        // Determine node color
         if (node._visited) {
             color = "#74f285";
         } else if (node._explored) {
             color = "#e39d34";
+        } else {
+            color = "#abc";
         }
 
-        canvasUtils.circle(ctx, x, y, r, color);
+        // Determine border color
+        if (this._selected == node) {
+            strokeStyle = "#f00";
+        } else {
+            strokeStyle = "#000";
+        }
+
+        // Draw node
+        canvasUtils.circle(ctx, x, y, this._radius, color, strokeStyle);
+
+        // Draw text inside node
         canvasUtils.text(ctx, node.text, x, y, "20px Georgia");
+
+        // Check for annotation
+        if (node.annotation) {
+            // Display annotation north-east of node
+            const dx = Math.sin(Math.PI / 4) * (this._radius + 2 /* border */);
+            const dy = -Math.cos(Math.PI / 4) * (this._radius - 12 /* text height */);
+
+            // Draw annotation
+            canvasUtils.text(ctx, node.annotation, x + dx, y + dy, "12px Arial", "black", "start");
+        }
+    }
+
+    /**
+     * Checks if the given position is within a node.
+     * 
+     * @param {*} position - The position {x, y} to check.
+     * @returns Returns a node or null. 
+     */
+    _hittest(position) {
+        let r = this._radius;
+        return TreeNode.find(this._tree, (node) => {
+            if (isNullOrUndefined(node._position)) {
+                return false;
+            }
+
+            let x = node._position.x - position.x;
+            let y = node._position.y - position.y;
+
+            // Checks if the position is within the radius of the current node
+            return Math.pow(x, 2) + Math.pow(y, 2) < Math.pow(r, 2);
+        })
     }
 }
