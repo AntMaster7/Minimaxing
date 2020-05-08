@@ -1,6 +1,6 @@
 # Minimaxing
 
-![alt text](https://raw.githubusercontent.com/eggersa/Minimaxing/master/doc/2020-05-06%2019_06_58-Minimax.png)
+![alt text](https://raw.githubusercontent.com/eggersa/Minimaxing/master/doc/screenshot.png)
 
 ## How to run the project
 To start the project out of the box, you need [Node.js](https://www.sitepoint.com/beginners-guide-node-package-manager/). 
