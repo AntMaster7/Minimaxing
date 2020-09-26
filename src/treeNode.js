@@ -79,15 +79,16 @@ export default class TreeNode {
         let stack = [];
         let explored = new Set();
         let current;
-        stack.push(node);
+        let depth = 0;
+        stack.push([node, depth]);
         while (current = stack[stack.length - 1]) {
             if (!explored.has(current)) {
-                for (let child of current.children) {
-                    stack.push(child);
+                for (let child of current[0].children) {
+                    stack.push([child, current[1] + 1]);
                 }
                 explored.add(current);
             } else {
-                visitor(stack.pop());
+                visitor(...stack.pop());
             }
         }
     }

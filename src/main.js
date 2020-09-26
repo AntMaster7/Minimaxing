@@ -7,10 +7,15 @@ window.onload = function () {
     canvas.height = window.innerHeight - 2;
 
     // Initialize our tree renderer.
-    const renderer = new TreeRenderer(canvas, 30, 40);
+    const renderer = new TreeRenderer(canvas, 20, 10);
+
+
+
+    let sliceAndSplice = (arr) => arr.length > 1 ? [sliceAndSplice(arr.slice(0, arr.length / 2)), sliceAndSplice(arr.slice(arr.length / 2, arr.length))] : [arr[0]];
+    let data = sliceAndSplice([10, 11, 9, 12, 14, [15, 13], 14, 5, 2, 4, 1, 3, 22, 20, 21]);
 
     // Create a tree object from a simple array.
-    let tree = TreeNode.parse([[[5], [-3], [4]], [[[[2], [-1]]], [1]]]);
+    let tree = TreeNode.parse(data);
 
     // Compute tree center position.
     let treeWidth = renderer.measureWidth(tree);
@@ -20,6 +25,31 @@ window.onload = function () {
 
     // Render the tree. 
     renderer.render(tree, x + xOffset, y);
+
+    function negamax(node, alpha, beta) {
+        /**
+         * Die Idee von Negamax ist, das Vorzeichen der Werte auf jeder neuen
+         * Stufe so zu alternieren, dass jeder Spieler zum Ziel hat, seine Werte
+         * zu maximieren.
+         */
+        node._explored = true;
+        if (node.children.length) {
+            for (let child of node.children) {
+                // We only care about something better than alpha.
+                alpha = Math.max(-negamax(child, -beta, -alpha), alpha);
+                // Check if preceding player has a better alternative.
+                if (alpha >= beta) {
+                    break;
+                }
+            }
+            return (node.value = alpha);
+        } else {
+            return node.value;
+        }
+    }
+
+    negamax(tree, -100, +100);
+    renderer.refresh();
 
     let stack = [];
     stack.push(tree);
@@ -65,7 +95,7 @@ window.onload = function () {
                 } else {
                     stepThrough = false;
                     current = stack.pop();
-                    
+
                     visit(current);
 
                     current._visited = true;
@@ -78,7 +108,7 @@ window.onload = function () {
     // Redraw tree if window size changed.
     window.onresize = function () {
         // Resize our canvas.
-        canvas.height = window.innerHeight -2;
+        canvas.height = window.innerHeight - 2;
 
         // Update new tree center position.
         treeWidth = renderer.measureWidth(tree);

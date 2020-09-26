@@ -10,14 +10,15 @@ class canvasUtils {
         context2d.restore();
     }
 
-    static rect(context2d, x, y, width, height, strokeStyle = "black", lineWidth = 1) {
+    static rect(context2d, x, y, width, height, fillStyle, strokeStyle = "black", lineWidth = 4) {
         context2d.save();
         context2d.beginPath();
         context2d.rect(x, y, width, height);
         context2d.lineWidth = lineWidth;
         context2d.strokeStyle = strokeStyle;
+        context2d.fillStyle = fillStyle;
         context2d.stroke();
-        context2d.setLineDash([]);
+        context2d.fill();
         context2d.restore();
     }
 

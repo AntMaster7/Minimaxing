@@ -116,11 +116,11 @@ export default class TreeRenderer {
         context2d.clearRect(0, 0, canvas.width, canvas.height);
 
         let that = this;
-        TreeNode.traverse(this._tree, (node) => {
+        TreeNode.traverse(this._tree, (node, depth) => {
             if (node._parent) {
                 that._connectNodes(context2d, node, node._parent);
             }
-            that._renderNode(context2d, node);
+            that._renderNode(context2d, node, depth);
         });
 
         this._rendered = true;
@@ -134,7 +134,7 @@ export default class TreeRenderer {
     }
 
     // renders node
-    _renderNode(ctx, node) {
+    _renderNode(ctx, node, depth) {
         let color, strokeStyle;
         let x = node._position.x,
             y = node._position.y;
@@ -156,7 +156,14 @@ export default class TreeRenderer {
         }
 
         // Draw node
-        canvasUtils.circle(ctx, x, y, this._radius, color, strokeStyle);
+        if (depth % 2 == 0) {
+            canvasUtils.circle(ctx, x, y, this._radius, color, strokeStyle);
+        } else {
+            let l = this._radius * 1.8; // pretty random
+            let dx = -l / 2,
+                dy = -l / 2;
+            canvasUtils.rect(ctx, x + dx, y + dy, l, l, color, strokeStyle);
+        }
 
         // Draw text inside node
         canvasUtils.text(ctx, node.text, x, y, "20px Georgia");
@@ -164,8 +171,8 @@ export default class TreeRenderer {
         // Check for annotation
         if (node.annotation) {
             // Display annotation north-east of node
-            const dx = Math.sin(Math.PI / 4) * (this._radius + 2 /* border */);
-            const dy = -Math.cos(Math.PI / 4) * (this._radius - 12 /* text height */);
+            let dx = Math.sin(Math.PI / 4) * (this._radius + 2 /* border */);
+            let dy = -Math.cos(Math.PI / 4) * (this._radius - 12 /* text height */);
 
             // Draw annotation
             canvasUtils.text(ctx, node.annotation, x + dx, y + dy, "12px Arial", "black", "start");
